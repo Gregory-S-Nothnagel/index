@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Conway's Game of Life Simulation GPU</title>
+
+</head>
+
+<body>
+
+<canvas id="gl-canvas" width="2000" height="2000">
+</canvas>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+#version 300 es
+
+in vec4 aPosition;
+in vec2 aTexCoord; // New input for texture coordinates
+out vec2 vTexCoord; // Output to pass to the fragment shader
+
+void main()
+{
+    gl_Position = aPosition;
+    vTexCoord = aTexCoord;  // Pass the texture coordinates to the fragment shader
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+#version 300 es
+
+precision mediump float;
+
+uniform sampler2D uTextureMap0;
+in vec2 vTexCoord;  // 'in' instead of 'varying'
+uniform vec2 uPixelSize; // The size of each pixel in texture coordinates
+
+out vec4 fragColor;  // Use 'out' for the fragment color output
+
+void main() {
+    // Sample the 8 neighboring cells and the current cell
+    vec4 cellState = texture(uTextureMap0, vTexCoord);
+	
+	
+    float aliveCount = 0.0;
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            if (x == 0 && y == 0) continue; // Skip the current cell
+            vec4 neighbor = texture(uTextureMap0, vTexCoord + vec2(x, y) * uPixelSize);
+            aliveCount += neighbor.r; // Assume red channel stores alive state (1 for alive, 0 for dead)
+        }
+    }
+
+    // Apply Game of Life rules
+    float newState = cellState.r;
+    if (cellState.r == 1.0) {
+        if (aliveCount < 2.0 || aliveCount > 3.0) newState = 0.0; // Cell dies
+    } else {
+        if (aliveCount == 3.0) newState = 1.0; // Cell becomes alive
+    }
+
+    fragColor = vec4(newState, newState, newState, 1.0); // Set new state
+}
+</script>
+
+<script src="conway.js"></script>
+
+</body>
+
+</html>
