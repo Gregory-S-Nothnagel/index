@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raymarching Shader</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas"></canvas>
+
+    <script type="x-shader/x-vertex" id="vertex-shader"> #version 300 es
+        in vec4 aPosition;
+        void main() {
+            gl_Position = aPosition;
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragment-shader"> #version 300 es
+	
+        precision mediump float;
+		const float PI = 3.1415926535897932384626433832795;
+        
+        uniform vec2 iResolution;
+		uniform vec3 eyePos;
+		uniform vec2 viewRotation;
+		float FOV_CONSTANT = 0.5;
+		
+		out vec4 fragColor;
+		
+		// assumes fragDir is normalized, which it should be
+		float getSphereDistance(vec3 fragDir, vec3 center, float r){
+			vec3 temp = eyePos - center;
+			float delta = pow(dot(fragDir,temp), 2.0) - (dot(temp,temp) - r*r);
+			float d1 = -dot(fragDir,temp) + sqrt(delta);
+			float d2 = -dot(fragDir,temp) - sqrt(delta);
+			
+			return min(d1,d2);
+		}
+
+		// this function uses EyePos and fragDir to find the intersection of the ray with all shapes in the scene
+		float getObjectDistance(vec3 fragDir){
+		
+			float min_dist = 1.0 / 0.0;
+		
+			float plane_dist = -eyePos.y / fragDir.y;
+			if (plane_dist >= 0.0) min_dist = min(min_dist, plane_dist);
+			
+			float sphere_dist = getSphereDistance(fragDir, vec3(0.0, 100.0, 100000.0), 1000.0);
+			if (sphere_dist >= 0.0) min_dist = min(min_dist, sphere_dist);
+			
+			float sphere_dist2 = getSphereDistance(fragDir, vec3(0.0, 100.0, 100.0), 10.0);
+			if (sphere_dist2 >= 0.0) min_dist = min(min_dist, sphere_dist2);
+			
+			
+			return min_dist;
+		}
+		
+		vec3 applyRotation(vec3 fragDir){
+						   
+			// Rotation matrices for x, y, z axes
+			mat3 rx = mat3(1.0, 0.0, 0.0,
+						   0.0, cos(viewRotation.x), sin(viewRotation.x),
+						   0.0, -sin(viewRotation.x), cos(viewRotation.x));
+						   
+			mat3 ry = mat3(cos(viewRotation.y), 0.0, -sin(viewRotation.y),
+						   0.0, 1.0, 0.0,
+						   sin(viewRotation.y), 0.0, cos(viewRotation.y));
+						   
+			return ry * rx * fragDir; // order matters here
+		}
+
+        void main() {
+            vec2 fragCoord = gl_FragCoord.xy / iResolution.y;
+            vec2 uv = vec2(fragCoord.x * 2.0 - (iResolution.x / iResolution.y), fragCoord.y * 2.0 - 1.0);
+            
+            vec3 fragDir = vec3(uv * FOV_CONSTANT, 1.0); // 1.0 because default view looks along +z axis
+			fragDir = normalize(applyRotation(fragDir));
+            
+			float object_distance = getObjectDistance(fragDir);
+            
+			
+			vec3 ip = eyePos + fragDir * object_distance; // "ip" for intersection point. This point is where the line of sight first intersects an object
+			if (object_distance < 0.0) fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+			else {
+				fragColor = vec4((sin(ip / 100.0) + vec3(1.0, 1.0, 1.0)) / 2.0, 1.0);
+				//fragColor = vec4(object_distance / 10.0, object_distance / 10.0, object_distance / 10.0, 1.0);
+			}
+        }
+    </script>
+
+	<script src="raymarching.js"></script>
+
+</body>
+</html>

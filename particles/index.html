@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Particle Simulator</title>
+
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden; /* Prevent scrollbars */
+    }
+
+    #gl-canvas {
+        display: block;   /* Prevents canvas from being treated as inline */
+        width: 100vw;     /* 100% of the viewport width */
+        height: 100vh;    /* 100% of the viewport height */
+    }
+</style>
+
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+</canvas>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+#version 300 es
+
+precision mediump float;
+
+in vec4 vColor;
+out vec4 fragColor;
+
+void main() {
+    // Calculate distance from the center of the point
+    vec2 coord = gl_PointCoord - vec2(0.5, 0.5);
+    float dist = length(coord);
+
+    // Discard the fragment if it's outside the circle (radius = 0.5)
+    if (dist > 0.5) {
+        discard;
+    }
+
+    // Set the color if within the circle
+    fragColor = vColor;
+}
+
+</script>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+#version 300 es
+
+in vec4 aPosition;
+in vec4 aColor;  // Receive color data from the buffer
+out vec4 vColor; // Pass color to the fragment shader
+
+void main()
+{
+    gl_PointSize = 30.0;
+    gl_Position = aPosition;
+    vColor = aColor;  // Pass the color to the fragment shader
+}
+
+</script>
+
+<script>
+    var canvas = document.getElementById("gl-canvas");
+    var gl;
+
+    function resizeCanvas() {
+        // Set the canvas width and height to the window's inner size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Adjust the WebGL viewport to the new canvas size
+        if (gl) {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    // Initialize WebGL context and other stuff
+    function init() {
+        gl = canvas.getContext('webgl2');
+        if (!gl) {
+            alert("WebGL 2.0 isn't available");
+        }
+
+        // Resize the canvas to fit the screen at initialization
+        resizeCanvas();
+
+        // Additional initialization code...
+        // e.g., shaders, buffers, rendering logic
+
+        // Attach a window resize event to adjust the canvas dynamically
+        window.addEventListener('resize', resizeCanvas);
+    }
+
+    // Call init when the page loads
+    init();
+</script>
+
+
+<script src="initShaders.js"></script>
+<script src="MVnew.js"></script>
+<script src="particles.js"></script>
+
+</body>
+</html>
