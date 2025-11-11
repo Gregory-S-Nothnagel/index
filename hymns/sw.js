@@ -53,10 +53,23 @@ self.addEventListener('message', (event) => {
           const response = await fetch(url, { cache: 'reload' });
 
           if (response.ok && response.status === 200) {
-            // Fully buffer to ensure entire file is downloaded
-            await response.clone().arrayBuffer(); // ensures full read
-            await cache.put(url, response.clone());
-            console.log('Cached complete file:', url);
+            // Read all bytes to ensure full download
+            const arrayBuffer = await response.clone().arrayBuffer();
+
+            // Build a response that keeps the essential headers
+            const headers = new Headers();
+            const ct = response.headers.get('Content-Type') || 'audio/mpeg';
+            const cl = response.headers.get('Content-Length');
+            const ar = response.headers.get('Accept-Ranges');
+
+            headers.set('Content-Type', ct);
+            if (cl) headers.set('Content-Length', cl);
+            if (ar) headers.set('Accept-Ranges', ar);
+
+            const fullResponse = new Response(arrayBuffer, { status: 200, headers });
+            await cache.put(url, fullResponse);
+
+            console.log('Cached with headers:', url, ct, cl, ar);
           } else {
             console.warn('Skipped caching', url, '(status:', response.status, ')');
           }
@@ -70,5 +83,7 @@ self.addEventListener('message', (event) => {
     });
   }
 });
+
+
 
 
