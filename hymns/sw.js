@@ -1,19 +1,17 @@
-const CACHE_NAME = 'music-cache-v1';
-const CORE_ASSETS = [
-  './',
-  './index.html',
-];
+// sw.js — works safely on GitHub Pages
+const CACHE_NAME = 'music-cache-v4';
+const CORE_ASSETS = ['./', './index.html'];
 
-// Install event — pre-cache basic assets
-self.addEventListener('install', event => {
+// --- Install: cache the core app shell ---
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS))
   );
   self.skipWaiting();
 });
 
-// Activate event — clean old caches
-self.addEventListener('activate', event => {
+// --- Activate: clean up old caches ---
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
@@ -22,43 +20,56 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch event — serve from cache, else network
-self.addEventListener('fetch', event => {
-  const req = event.request;
+// --- Fetch handler: serve from cache, then network fallback ---
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req);
+    caches.match(event.request).then(resp => {
+      if (resp) return resp;
+
+      return fetch(event.request).then(networkResp => {
+        // only cache successful full responses
+        if (networkResp.ok && (event.request.destination === 'audio' || event.request.url.endsWith('.mp3') || event.request.url.endsWith('.mkv'))) {
+          const clone = networkResp.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return networkResp;
+      }).catch(() => caches.match('./index.html'));
     })
   );
 });
 
-// Listen for messages from index.html
-self.addEventListener('message', async event => {
+// --- Handle manual "Download All" command ---
+self.addEventListener('message', (event) => {
   if (event.data?.type === 'CACHE_SONGS') {
-    const songs = event.data.songs;
-    const client = await self.clients.get(event.source.id);
-    if (!songs || !client) return;
+    const songs = event.data.songs.map(s => s.url);
 
-    const cache = await caches.open(CACHE_NAME);
-    let done = 0;
-    const total = songs.length;
+    caches.open(CACHE_NAME).then(async (cache) => {
+      let completed = 0;
 
-    for (const song of songs) {
-      try {
-        // Force full download — no partial fetches
-        const response = await fetch(song.url, { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        await cache.put(song.url, response.clone());
-        done++;
-        // Send progress update to page
-        client.postMessage({ type: 'CACHE_PROGRESS', done, total });
-      } catch (err) {
-        console.error(`Failed to cache ${song.title}:`, err);
+      for (const url of songs) {
+        try {
+          // ⚙️ Fetch without CORS enforcement
+          const response = await fetch(url, { mode: 'no-cors' });
+
+          // opaque responses can still be cached!
+          if (response && (response.ok || response.type === 'opaque')) {
+            await cache.put(url, response.clone());
+            completed++;
+          } else {
+            console.warn('Skipped caching', url, '(status:', response.status, ')');
+          }
+        } catch (err) {
+          console.warn('Failed to cache', url, err);
+        }
       }
-    }
 
-    // Notify when done
-    client.postMessage({ type: 'CACHE_COMPLETE' });
+      console.log(`✅ Cached ${completed}/${songs.length} songs`);
+
+      // notify page when done
+      const clients = await self.clients.matchAll();
+      clients.forEach(client =>
+        client.postMessage({ type: 'CACHE_COMPLETE', count: completed })
+      );
+    });
   }
 });
