@@ -44,46 +44,15 @@
   <script>
     // --- Playlist (replace with your own song URLs) ---
     const playlist = [
-		{ title: "Are You Washed In The Blood?", url: "./ARE_YOU_WASHED_IN_THE_BLOOD.mkv" },
-		{ title: "God Leads His Dear Children Along", url: "./GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" },
-		{ title: "Nothing But The Blood Of Jesus", url: "./NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3" },
-		{ title: "It Is Well With My Soul", url: "./IT_IS_WELL_WITH_MY_SOUL.mp3" },
-		{ title: "Trust And Obey", url: "./TRUST_AND_OBEY.mp3" },
-		{ title: "I'm A Pilgrim", url: "./I'M_A_PILGRIM.mp3" },
-		{ title: "Rock Of Ages", url: "./ROCK_OF_AGES.mp3" },
-		{ title: "My Savior First Of All", url: "./MY_SAVIOR_FIRST_OF_ALL.mp3" },
-		{ title: "What A Friend We Have In Jesus", url: "./WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3" },
-			/*{ title: "Blessed Assurance", file: "BLESSED_ASSURANCE.mp3" },
-			{ title: "My God Is Real", file: "MY_GOD_IS_REAL.mp3" },
-			{ title: "What A Savior", file: "WHAT_A_SAVIOR.mp3" },
-			{ title: "God Will Take Care Of You", file: "GOD_WILL_TAKE_CARE_OF_YOU.mp3" },
-			{ title: "A Mighty Fortress Is Our God", file: "A_MIGHTY_FORTRESS_IS_OUR_GOD.mp3" },
-			{ title: "Fairest Lord Jesus", file: "FAIREST_LORD_JESUS.mp3" },
-			{ title: "Great Is Thy Faithfulness", file: "GREAT_IS_THY_FAITHFULNESS.mp3" },
-			{ title: "He Will Hold Me Fast", file: "HE_WILL_HOLD_ME_FAST.mp3" },
-			{ title: "Higher Ground", file: "HIGHER_GROUND.mp3" },
-			{ title: "I'll Fly Away", file: "I'LL_FLY_AWAY.mp3" },
-			{ title: "My Hope Is Built On Nothing Less", file: "MY_HOPE_IS_BUILT_ON_NOTHING_LESS.mp3" },
-			{ title: "My Savior's Love", file: "MY_SAVIOR'S_LOVE.mp3" },
-			{ title: "Never Grow Old", file: "NEVER_GROW_OLD.mp3" },
-			{ title: "The Lily Of The Valley", file: "THE_LILY_OF_THE_VALLEY.mp3" },
-			{ title: "The Lord Is My Shepherd Forever", file: "THE_LORD_IS_MY_SHEPHERD_FOREVER.mp3" },
-			{ title: "He'll Be A Friend", file: "HE'LL_BE_A_FRIEND.mp3" },
-			{ title: "He'll Understand And Say Well Done", file: "HE'LL_UNDERSTAND_AND_SAY_WELL_DONE.mp3" },
-			{ title: "I Surrender All", file: "I_SURRENDER_ALL.mp3" },
-			{ title: "Leaning On The Everlasting Arms", file: "LEANING_ON_THE_EVERLASTING_ARMS.mp3" },
-			{ title: "The Sweet By And By", file: "THE_SWEET_BY_AND_BY.mp3" },
-			{ title: "Amazing Grace", file: "AMAZING_GRACE.mp3" },
-			{ title: "Amazing Love (And Can It Be)", file: "AMAZING_LOVE_AND_CAN_IT_BE.mp3" },
-			{ title: "Be Thou My Vision", file: "BE_THOU_MY_VISION.mp3" },
-			{ title: "God Must Have My Fortune Laid Away", file: "GOD_MUST_HAVE_MY_FORTUNE_LAID_AWAY.mp3" },
-			{ title: "In The Garden", file: "IN_THE_GARDEN.mp3" },
-			{ title: "It Is No Secret", file: "IT_IS_NO_SECRET.mp3" },
-			{ title: "Jesus Paid It All", file: "JESUS_PAID_IT_ALL.mp3" },
-			{ title: "Walk On", file: "WALK_ON.mp3" },
-			{ title: "Where Could I Go But To The Lord", file: "WHERE_COULD_I_GO_BUT_TO_THE_LORD.mp3" },
-			{ title: "Where No One Stands Alone", file: "WHERE_NO_ONE_STANDS_ALONE.mp3" },
-			{ title: "Without Him", file: "WITHOUT_HIM.mp3" },*/
+      { title: "Are You Washed In The Blood?", url: "./ARE_YOU_WASHED_IN_THE_BLOOD.mkv" },
+      { title: "God Leads His Dear Children Along", url: "./GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" },
+      { title: "Nothing But The Blood Of Jesus", url: "./NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3" },
+      { title: "It Is Well With My Soul", url: "./IT_IS_WELL_WITH_MY_SOUL.mp3" },
+      { title: "Trust And Obey", url: "./TRUST_AND_OBEY.mp3" },
+      { title: "I'm A Pilgrim", url: "./I'M_A_PILGRIM.mp3" },
+      { title: "Rock Of Ages", url: "./ROCK_OF_AGES.mp3" },
+      { title: "My Savior First Of All", url: "./MY_SAVIOR_FIRST_OF_ALL.mp3" },
+      { title: "What A Friend We Have In Jesus", url: "./WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3" },
     ];
 
     const list = document.getElementById('playlist');
@@ -94,7 +63,7 @@
       const li = document.createElement('li');
       li.innerHTML = `
         <div><strong>${i + 1}. ${song.title}</strong></div>
-        <audio controls preload="auto">
+        <audio controls preload="none">
           <source src="${song.url}" type="audio/mpeg">
         </audio>
       `;
@@ -111,10 +80,10 @@
       statusEl.textContent = 'Offline support not available in this browser.';
     }
 
-    // --- Trigger pre-caching of all songs ---
+    // --- Trigger full download + cache of all songs ---
     document.getElementById('downloadAll').addEventListener('click', async () => {
-      statusEl.textContent = 'Caching songs for offline use...';
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      statusEl.textContent = '⏳ Downloading songs for offline use...';
+      if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'CACHE_SONGS', songs: playlist });
       } else {
         statusEl.textContent = 'Please reload the page to enable offline caching.';
@@ -124,11 +93,12 @@
     // --- Listen for cache completion message ---
     navigator.serviceWorker?.addEventListener('message', (event) => {
       if (event.data?.type === 'CACHE_COMPLETE') {
-        statusEl.textContent = '✅ All songs downloaded and ready for offline playback.';
+        statusEl.textContent = '✅ All songs fully downloaded and ready for offline playback.';
+      }
+      if (event.data?.type === 'CACHE_PROGRESS') {
+        statusEl.textContent = `Downloading ${event.data.done}/${event.data.total} songs...`;
       }
     });
   </script>
 </body>
 </html>
-
-
