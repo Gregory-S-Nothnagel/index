@@ -22,15 +22,25 @@ self.addEventListener('activate', (event) => {
 
 // --- Fetch handler: serve from cache, then network fallback ---
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+
+  // Handle range requests for audio/video
+  if (req.headers.get('range')) {
+    event.respondWith(handleRangeRequest(req));
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then(resp => {
+    caches.match(req).then(resp => {
       if (resp) return resp;
 
-      return fetch(event.request).then(networkResp => {
-        // only cache successful full responses
-        if (networkResp.ok && (event.request.destination === 'audio' || event.request.url.endsWith('.mp3') || event.request.url.endsWith('.mkv'))) {
+      return fetch(req).then(networkResp => {
+        if (
+          networkResp.ok &&
+          (req.destination === 'audio' || req.url.endsWith('.mp3') || req.url.endsWith('.mkv'))
+        ) {
           const clone = networkResp.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
         }
         return networkResp;
       }).catch(() => caches.match('./index.html'));
@@ -38,38 +48,41 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// --- Handle manual "Download All" command ---
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'CACHE_SONGS') {
-    const songs = event.data.songs.map(s => s.url);
+// --- Handle range requests manually ---
+async function handleRangeRequest(req) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(req.url);
 
-    caches.open(CACHE_NAME).then(async (cache) => {
-      let completed = 0;
+  if (!cached) {
+    // not cached → fall back to network
+    return fetch(req);
+  }
 
-      for (const url of songs) {
-        try {
-          // ⚙️ Fetch without CORS enforcement
-          const response = await fetch(url, { mode: 'no-cors' });
+  const blob = await cached.blob();
+  const rangeHeader = req.headers.get('range');
+  const size = blob.size;
 
-          // opaque responses can still be cached!
-          if (response && (response.ok || response.type === 'opaque')) {
-            await cache.put(url, response.clone());
-            completed++;
-          } else {
-            console.warn('Skipped caching', url, '(status:', response.status, ')');
-          }
-        } catch (err) {
-          console.warn('Failed to cache', url, err);
-        }
-      }
-
-      console.log(`✅ Cached ${completed}/${songs.length} songs`);
-
-      // notify page when done
-      const clients = await self.clients.matchAll();
-      clients.forEach(client =>
-        client.postMessage({ type: 'CACHE_COMPLETE', count: completed })
-      );
+  // Parse range header (e.g., "bytes=500-")
+  const match = /bytes=(\d+)-(\d+)?/.exec(rangeHeader);
+  if (!match) {
+    return new Response(blob, {
+      status: 200,
+      headers: { 'Content-Type': cached.headers.get('Content-Type') || 'audio/mpeg' },
     });
   }
-});
+
+  const start = Number(match[1]);
+  const end = match[2] ? Number(match[2]) : size - 1;
+  const chunk = blob.slice(start, end + 1);
+
+  return new Response(chunk, {
+    status: 206,
+    statusText: 'Partial Content',
+    headers: {
+      'Content-Range': `bytes ${start}-${end}/${size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunk.size,
+      'Content-Type': cached.headers.get('Content-Type') || 'audio/mpeg',
+    },
+  });
+}
