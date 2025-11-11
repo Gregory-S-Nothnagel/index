@@ -1,25 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Hymns</title>
-		<style>
-			.hidden { display: none; }
-			audio { margin: 10px 0; }
-			body { max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
-			button { margin-bottom: 20px; padding: 10px; font-size: 16px; cursor: pointer; }
-		</style>
-	</head>
-	<body>
-		<h1>🎵 Download And Play Hymns</h1>
-		<button onclick="prepareAndDownload()">Download All Hymns (Sorted by Duration)</button>
-		<div id="hymns"></div>
-		<script>
-			const hymns = [
-				{ title: "Are You Washed In The Blood?", file: "ARE_YOU_WASHED_IN_THE_BLOOD.mkv" },
-				{ title: "God Leads His Dear Children Along", file: "GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" },
-				{ title: "Nothing But The Blood Of Jesus", file: "NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3" },
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline Music Player</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      text-align: center;
+      color: #333;
+    }
+    h1 { font-size: 1.5rem; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 1em 0; }
+    button {
+      background: #0078ff;
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0.5em;
+    }
+    button:hover { background: #005fd1; }
+    audio { width: 100%; margin-top: 0.5em; }
+    .status {
+      margin-top: 1em;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 Offline Music Player</h1>
+  <p>Anyone with this link can listen — songs will be cached for offline playback.</p>
+
+  <button id="downloadAll">⬇️ Download All for Offline Use</button>
+  <ul id="playlist"></ul>
+  <div class="status" id="status">Loading songs...</div>
+
+  <script>
+    // --- Playlist (replace with your own song URLs) ---
+    const playlist = [
+      { title: "Are You Washed In The Blood?", url: "./ARE_YOU_WASHED_IN_THE_BLOOD.mkv" },
+			{ title: "God Leads His Dear Children Along", url: "./GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" },
+			{ title: "Nothing But The Blood Of Jesus", url: "./NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3" },
 			/*{ title: "My God Is Real", file: "MY_GOD_IS_REAL.mp3" },
 			{ title: "What A Savior", file: "WHAT_A_SAVIOR.mp3" },
 			{ title: "My Savior First Of All", file: "MY_SAVIOR_FIRST_OF_ALL.mp3" },
@@ -56,53 +83,49 @@
 			{ title: "Where Could I Go But To The Lord", file: "WHERE_COULD_I_GO_BUT_TO_THE_LORD.mp3" },
 			{ title: "Where No One Stands Alone", file: "WHERE_NO_ONE_STANDS_ALONE.mp3" },
 			{ title: "Without Him", file: "WITHOUT_HIM.mp3" },*/
-			];
-			
-			function loadHymns() {
-			    const container = document.getElementById('hymns');
-			    hymns.forEach(hymn => {
-			        const hymnElement = document.createElement('div');
-			        hymnElement.classList.add('hymn');
-			        hymnElement.innerHTML = `
-			            <h3>${hymn.title}</h3>
-			            <audio controls>
-			                <source src="${hymn.file}" type="audio/mpeg">
-			            </audio>
-			        `;
-			        container.appendChild(hymnElement);
-			    });
-			}
-			
-			function fetchDurations() {
-			    return Promise.all(hymns.map(hymn => {
-			        return new Promise(resolve => {
-			            const audio = new Audio(hymn.file);
-			            audio.preload = "metadata"; 
-			            audio.onloadedmetadata = () => resolve({ ...hymn, duration: audio.duration });
-			            audio.onerror = () => resolve({ ...hymn, duration: Infinity }); 
-			        });
-			    }));
-			}
-			
-			async function prepareAndDownload() {
-			    const hymnsWithDurations = await fetchDurations();
-			    const sortedHymns = hymnsWithDurations.sort((a, b) => b.duration - a.duration);
-			
-			    sortedHymns.forEach((hymn, index) => {
-			        setTimeout(() => {
-			            const a = document.createElement('a');
-			            a.href = hymn.file;
-			            a.download = hymn.file;
-			            document.body.appendChild(a);
-			            a.click();
-			            document.body.removeChild(a);
-			        }, index * 500); // 500ms delay to avoid browser limits
-			    });
-			}
-			
-			window.addEventListener('load', loadHymns);
-		</script>
-	</body>
+    ];
+
+    const list = document.getElementById('playlist');
+    const statusEl = document.getElementById('status');
+
+    // --- Build Playlist UI ---
+    playlist.forEach((song, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <div><strong>${i + 1}. ${song.title}</strong></div>
+        <audio controls preload="auto">
+          <source src="${song.url}" type="audio/mpeg">
+        </audio>
+      `;
+      list.appendChild(li);
+    });
+    statusEl.textContent = 'Ready — you can play songs or download them for offline use.';
+
+    // --- Register Service Worker ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(() => {
+        console.log('Service Worker registered.');
+      }).catch(err => console.error('SW registration failed:', err));
+    } else {
+      statusEl.textContent = 'Offline support not available in this browser.';
+    }
+
+    // --- Trigger pre-caching of all songs ---
+    document.getElementById('downloadAll').addEventListener('click', async () => {
+      statusEl.textContent = 'Caching songs for offline use...';
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CACHE_SONGS', songs: playlist });
+      } else {
+        statusEl.textContent = 'Please reload the page to enable offline caching.';
+      }
+    });
+
+    // --- Listen for cache completion message ---
+    navigator.serviceWorker?.addEventListener('message', (event) => {
+      if (event.data?.type === 'CACHE_COMPLETE') {
+        statusEl.textContent = '✅ All songs downloaded and ready for offline playback.';
+      }
+    });
+  </script>
+</body>
 </html>
-
-
