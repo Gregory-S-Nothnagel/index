@@ -52,15 +52,11 @@ self.addEventListener('message', (event) => {
           console.log('Fetching full file:', url);
           const response = await fetch(url, { cache: 'reload' });
 
-          // Only store if full file (200 OK)
           if (response.ok && response.status === 200) {
-            // Fully read the body so we know it’s downloaded
-            const blob = await response.clone().blob();
-            console.log('Downloaded', url, '-', blob.size, 'bytes');
-            const fullResponse = new Response(blob, {
-              headers: { 'Content-Type': response.headers.get('Content-Type') || 'audio/mpeg' }
-            });
-            await cache.put(url, fullResponse);
+            // Fully buffer to ensure entire file is downloaded
+            await response.clone().arrayBuffer(); // ensures full read
+            await cache.put(url, response.clone());
+            console.log('Cached complete file:', url);
           } else {
             console.warn('Skipped caching', url, '(status:', response.status, ')');
           }
