@@ -48,23 +48,31 @@ self.addEventListener('message', (event) => {
 
     caches.open(CACHE_NAME).then(async (cache) => {
       try {
-        // Download entire MP3 files (full 200 OK)
         for (const url of songs) {
-          const response = await fetch(url, { headers: { Range: '' } }); // request full file
+          console.log('Fetching full file:', url);
+          const response = await fetch(url, { cache: 'reload' });
+
+          // Only store if full file (200 OK)
           if (response.ok && response.status === 200) {
-            await cache.put(url, response.clone());
+            // Fully read the body so we know it’s downloaded
+            const blob = await response.clone().blob();
+            console.log('Downloaded', url, '-', blob.size, 'bytes');
+            const fullResponse = new Response(blob, {
+              headers: { 'Content-Type': response.headers.get('Content-Type') || 'audio/mpeg' }
+            });
+            await cache.put(url, fullResponse);
           } else {
             console.warn('Skipped caching', url, '(status:', response.status, ')');
           }
         }
 
-        // Notify all clients (tabs) that caching is complete
         const clients = await self.clients.matchAll();
         clients.forEach(client => client.postMessage({ type: 'CACHE_COMPLETE' }));
-
       } catch (err) {
         console.error('Error caching songs:', err);
       }
     });
   }
 });
+
+
