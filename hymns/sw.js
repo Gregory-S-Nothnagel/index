@@ -12,9 +12,9 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       // Cache everything in the directory except index.html
       return cache.addAll([
-        '/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
-        '/I\'M_A_PILGRIM.mp3',
-        '/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
+        'https://gregory-s-nothnagel.github.io/index/hymns/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
+        'https://gregory-s-nothnagel.github.io/index/hymns/I\'M_A_PILGRIM.mp3',
+        'https://gregory-s-nothnagel.github.io/index/hymns/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
       ]);
     })
   );
