@@ -7,7 +7,9 @@
 </head>
 <body>
   <h1>Hymns</h1>
-  <p>Wait for the notification saying "CACHE_COMPLETED". Then, you can go offline and hit the links to the songs and listen offline.</p>
+  <p>Wait a few minutes before going offline, to give the songs time to download to your cache.</p>
+  <p>This tab does not have to stay open to keep the songs in the cache, which means...</p>
+  <p>After downloading, you can close this tab if you really want to. Just bookmark this tab first so that you can find it when you're offline!</p>
 
   <!-- Display links to the cached files using relative paths -->
   <a href="./ARE_YOU_WASHED_IN_THE_BLOOD.mp4" target="_blank">ARE YOU WASHED IN THE BLOOD?</a><br><br>
@@ -29,18 +31,14 @@
   <script>
     // Check if service workers are supported and register the service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
-
-        // Listen for messages from the service worker
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          if (event.data && event.data.type === 'CACHE_COMPLETED') {
-            // Notify the user when caching is complete
-            alert('All files have been successfully cached for offline use!');
-          }
-        });
-      }).catch((error) => {
-        console.error('Service Worker registration failed:', error);
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js')
+          .then(function (registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function (error) {
+            console.log('Service Worker registration failed:', error);
+          });
       });
     }
   </script>

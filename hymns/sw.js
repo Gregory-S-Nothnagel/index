@@ -21,14 +21,8 @@ const filesToCache = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(filesToCache).then(() => {
-        // Notify the client when caching is complete
-        self.clients.matchAll().then((clients) => {
-          clients.forEach((client) => {
-            client.postMessage({ type: 'CACHE_COMPLETED' });
-          });
-        });
-      });
+      // Cache everything in the directory except index.html
+      return cache.addAll(filesToCache);
     })
   );
 });
