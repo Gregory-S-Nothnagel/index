@@ -3,7 +3,10 @@ const CACHE_NAME = 'file-cache-v1';
 // Files to cache when the service worker installs
 const filesToCache = [
   '/',
-  '/index.html', // This will not be cached, it's just to ensure it's loaded
+  '/index.html', // Cache index.html for offline use (even though it will be served directly from the cache)
+  '/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
+  '/I\'M_A_PILGRIM.mp3',
+  '/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
 ];
 
 // Install service worker and cache necessary files
@@ -11,11 +14,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       // Cache everything in the directory except index.html
-      return cache.addAll([
-        'https://gregory-s-nothnagel.github.io/index/hymns/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
-        'https://gregory-s-nothnagel.github.io/index/hymns/I\'M_A_PILGRIM.mp3',
-        'https://gregory-s-nothnagel.github.io/index/hymns/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
-      ]);
+      return cache.addAll(filesToCache);
     })
   );
 });
