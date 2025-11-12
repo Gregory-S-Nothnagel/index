@@ -1,10 +1,8 @@
-const CACHE_NAME = 'file-cache-v1';
+const CACHE_NAME = 'file-cache';
 
 // Files to cache when the service worker installs
 const filesToCache = [
-  'https://gregory-s-nothnagel.github.io/index/hymns/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
-  'https://gregory-s-nothnagel.github.io/index/hymns/I\'M_A_PILGRIM.mp3',
-  'https://gregory-s-nothnagel.github.io/index/hymns/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
+  './AMAZING_GRACE.mp3',
 ];
 
 // Install service worker and cache necessary files
@@ -36,10 +34,6 @@ self.addEventListener('activate', (event) => {
 
 // Intercept network requests and cache any file (except index.html)
 self.addEventListener('fetch', (event) => {
-  // Don't cache index.html, we only want to cache other files
-  if (event.request.url.endsWith('/index.html')) {
-    return;
-  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
