@@ -34,20 +34,16 @@ self.addEventListener('activate', (event) => {
 
 // Intercept network requests and cache any file (except index.html)
 self.addEventListener('fetch', (event) => {
-
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse; // Return cached response if available
       }
 
-      // If not in cache, fetch the file and cache it
-      return fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          // Cache the response for future use
-          cache.put(event.request, response.clone());
-          return response;
-        });
+      // If the file is not in cache, return a failure response
+      return new Response('Resource not found in cache', {
+        status: 404, // You can use a different status code, e.g., 410 or 503
+        statusText: 'Not Found'
       });
     })
   );
