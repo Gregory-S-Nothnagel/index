@@ -1,104 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline Music Player</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 600px;
-      margin: 2rem auto;
-      text-align: center;
-      color: #333;
-    }
-    h1 { font-size: 1.5rem; }
-    ul { list-style: none; padding: 0; }
-    li { margin: 1em 0; }
-    button {
-      background: #0078ff;
-      color: white;
-      border: none;
-      padding: 0.5em 1em;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 0.5em;
-    }
-    button:hover { background: #005fd1; }
-    audio { width: 100%; margin-top: 0.5em; }
-    .status {
-      margin-top: 1em;
-      font-size: 0.9em;
-      color: #555;
-    }
-  </style>
+  <title>File Caching Example</title>
 </head>
 <body>
-  <h1>🎵 Offline Music Player</h1>
-  <p>Anyone with this link can listen — songs will be cached for offline playback.</p>
+  <h1>File Caching Example</h1>
+  <p>Any files in this directory except index.html will be cached for offline use.</p>
 
-  <button id="downloadAll">⬇️ Download All for Offline Use</button>
-  <ul id="playlist"></ul>
-  <div class="status" id="status">Loading songs...</div>
+  <!-- Display links to the cached files using relative paths -->
+  <strong>ARE YOU WASHED IN THE BLOOD?</strong> <audio controls><source src="./ARE_YOU_WASHED_IN_THE_BLOOD.mkv" type="audio/mp3"></audio><br>
+  <strong>I'M A PILGRIM</strong> <audio controls><source src="./I'M_A_PILGRIM.mp3" type="audio/mp3"></audio><br>
+  <strong>GOD LEADS HIS DEAR CHILDREN ALONG</strong> <audio controls><source src="./GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" type="audio/mp3"></audio><br>
 
+  
   <script>
-    // --- Playlist (replace with your own song URLs) ---
-    const playlist = [
-      { title: "Are You Washed In The Blood?", url: "./ARE_YOU_WASHED_IN_THE_BLOOD.mkv" },
-      { title: "God Leads His Dear Children Along", url: "./GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv" },
-      { title: "Nothing But The Blood Of Jesus", url: "./NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3" },
-      { title: "It Is Well With My Soul", url: "./IT_IS_WELL_WITH_MY_SOUL.mp3" },
-      { title: "Trust And Obey", url: "./TRUST_AND_OBEY.mp3" },
-      { title: "I'm A Pilgrim", url: "./I'M_A_PILGRIM.mp3" },
-      { title: "Rock Of Ages", url: "./ROCK_OF_AGES.mp3" },
-      { title: "My Savior First Of All", url: "./MY_SAVIOR_FIRST_OF_ALL.mp3" },
-      { title: "What A Friend We Have In Jesus", url: "./WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3" },
-    ];
-
-    const list = document.getElementById('playlist');
-    const statusEl = document.getElementById('status');
-
-    // --- Build Playlist UI ---
-    playlist.forEach((song, i) => {
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <div><strong>${i + 1}. ${song.title}</strong></div>
-        <audio controls preload="none">
-          <source src="${song.url}" type="audio/mpeg">
-        </audio>
-      `;
-      list.appendChild(li);
-    });
-    statusEl.textContent = 'Ready — you can play songs or download them for offline use.';
-
-    // --- Register Service Worker ---
+    // Check if service workers are supported and register the service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(() => {
-        console.log('Service Worker registered.');
-      }).catch(err => console.error('SW registration failed:', err));
-    } else {
-      statusEl.textContent = 'Offline support not available in this browser.';
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js')
+          .then(function (registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function (error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
     }
-
-    // --- Trigger full download + cache of all songs ---
-    document.getElementById('downloadAll').addEventListener('click', async () => {
-      statusEl.textContent = '⏳ Downloading songs for offline use...';
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'CACHE_SONGS', songs: playlist });
-      } else {
-        statusEl.textContent = 'Please reload the page to enable offline caching.';
-      }
-    });
-
-    // --- Listen for cache completion message ---
-    navigator.serviceWorker?.addEventListener('message', (event) => {
-      if (event.data?.type === 'CACHE_COMPLETE') {
-        statusEl.textContent = '✅ All songs fully downloaded and ready for offline playback.';
-      }
-      if (event.data?.type === 'CACHE_PROGRESS') {
-        statusEl.textContent = `Downloading ${event.data.done}/${event.data.total} songs...`;
-      }
-    });
   </script>
 </body>
 </html>

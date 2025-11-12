@@ -1,88 +1,63 @@
-// sw.js — works safely on GitHub Pages
-const CACHE_NAME = 'music-cache-v4';
-const CORE_ASSETS = ['./', './index.html'];
+const CACHE_NAME = 'file-cache-v1';
 
-// --- Install: cache the core app shell ---
+// Files to cache when the service worker installs
+const filesToCache = [
+  '/',
+  '/index.html', // This will not be cached, it's just to ensure it's loaded
+];
+
+// Install service worker and cache necessary files
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS))
-  );
-  self.skipWaiting();
-});
-
-// --- Activate: clean up old caches ---
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-// --- Fetch handler: serve from cache, then network fallback ---
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-
-  // Handle range requests for audio/video
-  if (req.headers.get('range')) {
-    event.respondWith(handleRangeRequest(req));
-    return;
-  }
-
-  event.respondWith(
-    caches.match(req).then(resp => {
-      if (resp) return resp;
-
-      return fetch(req).then(networkResp => {
-        if (
-          networkResp.ok &&
-          (req.destination === 'audio' || req.url.endsWith('.mp3') || req.url.endsWith('.mkv'))
-        ) {
-          const clone = networkResp.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
-        }
-        return networkResp;
-      }).catch(() => caches.match('./index.html'));
+    caches.open(CACHE_NAME).then((cache) => {
+      // Cache everything in the directory except index.html
+      return cache.addAll([
+        '/ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
+        '/I\'M_A_PILGRIM.mp3',
+        '/GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mkv',
+      ]);
     })
   );
 });
 
-// --- Handle range requests manually ---
-async function handleRangeRequest(req) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(req.url);
+// Activate service worker
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
 
-  if (!cached) {
-    // not cached → fall back to network
-    return fetch(req);
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (!cacheWhitelist.includes(cacheName)) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Intercept network requests and cache any file (except index.html)
+self.addEventListener('fetch', (event) => {
+  // Don't cache index.html, we only want to cache other files
+  if (event.request.url.endsWith('/index.html')) {
+    return;
   }
 
-  const blob = await cached.blob();
-  const rangeHeader = req.headers.get('range');
-  const size = blob.size;
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse; // Return cached response if available
+      }
 
-  // Parse range header (e.g., "bytes=500-")
-  const match = /bytes=(\d+)-(\d+)?/.exec(rangeHeader);
-  if (!match) {
-    return new Response(blob, {
-      status: 200,
-      headers: { 'Content-Type': cached.headers.get('Content-Type') || 'audio/mpeg' },
-    });
-  }
-
-  const start = Number(match[1]);
-  const end = match[2] ? Number(match[2]) : size - 1;
-  const chunk = blob.slice(start, end + 1);
-
-  return new Response(chunk, {
-    status: 206,
-    statusText: 'Partial Content',
-    headers: {
-      'Content-Range': `bytes ${start}-${end}/${size}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunk.size,
-      'Content-Type': cached.headers.get('Content-Type') || 'audio/mpeg',
-    },
-  });
-}
+      // If not in cache, fetch the file and cache it
+      return fetch(event.request).then((response) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          // Cache the response for future use
+          cache.put(event.request, response.clone());
+          return response;
+        });
+      });
+    })
+  );
+});
