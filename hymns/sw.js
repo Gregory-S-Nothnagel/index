@@ -14,7 +14,12 @@ const filesToCache = [
   './ROCK_OF_AGES.mp3',
   './LEANING_ON_THE_EVERLASTING_ARMS.mp3',
   './THE_SWEET_BY_AND_BY.mp3',
-  './WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3'
+  './WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3',
+  './SWING_LOW_SWEET_CHARIOT.mp4',
+  './FARTHER_ALONG.mp4',
+  './ILL_HAVE_A_NEW_LIFE.mp4',
+  './STAND_BY_ME_FATHER.mp4',
+  './SWING_DOWN_SWEET_CHARIOT.mp4'
 ];
 
 // Install service worker and cache necessary files
