@@ -32,10 +32,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Intercept network requests and cache any file (except index.html)
+// Intercept network requests and look in cache
 self.addEventListener('fetch', (event) => {
+  const requestUrl = new URL(event.request.url);
+  
+  // Make sure the request URL is only looking at the path after the domain (relative URL)
+  const relativeUrl = requestUrl.pathname;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(relativeUrl).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse; // Return cached response if available
       }
