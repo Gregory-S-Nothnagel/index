@@ -8,7 +8,6 @@ const filesToCache = [
   './IM_A_PILGRIM.mp3',
   './MY_SAVIOR_FIRST_OF_ALL.mp3',
   './NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3',
-  './GREAT_IS_THY_FAITHFULNESS.mp3',
   './IT_IS_WELL_WITH_MY_SOUL.mp3',
   './TRUST_AND_OBEY.mp3',
   './ROCK_OF_AGES.mp3',
