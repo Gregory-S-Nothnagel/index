@@ -3,6 +3,11 @@ const CACHE_NAME = 'file-cache';
 // Files to cache when the service worker installs
 const filesToCache = [
   './AMAZING_GRACE.mp3',
+  './ARE_YOU_WASHED_IN_THE_BLOOD.mkv',
+  './GREAT_IS_THY_FAITHFULNESS.mp3',
+  './I\'M_A_PILGRIM.mp3',
+  './MY_SAVIOR_FIRST_OF_ALL.mp3',
+  './NOTHING_BUT_THE_BLOOD_OF_JESUS.mp3'
 ];
 
 // Install service worker and cache necessary files
