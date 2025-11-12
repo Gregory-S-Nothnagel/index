@@ -2,6 +2,7 @@ const CACHE_NAME = 'file-cache';
 
 // Files to cache when the service worker installs
 const filesToCache = [
+  './index.html',
   './ARE_YOU_WASHED_IN_THE_BLOOD.mp4',
   './GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mp4',
   './GREAT_IS_THY_FAITHFULNESS.mp3',
@@ -20,11 +21,18 @@ const filesToCache = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Cache everything in the directory except index.html
-      return cache.addAll(filesToCache);
+      return cache.addAll(filesToCache).then(() => {
+        // Notify the client when caching is complete
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'CACHE_COMPLETED' });
+          });
+        });
+      });
     })
   );
 });
+
 
 // Activate service worker
 self.addEventListener('activate', (event) => {
