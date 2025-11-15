@@ -16,6 +16,7 @@ const filesToCache = [
   './THE_SWEET_BY_AND_BY.mp3',
   './WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3',
   './SWING_LOW_SWEET_CHARIOT.mp3',
+  './JESUS_PAID_IT_ALL.mp3',
   './FARTHER_ALONG.mp3',
   './ILL_HAVE_A_NEW_LIFE.mp3',
   './STAND_BY_ME_FATHER.mp3',
