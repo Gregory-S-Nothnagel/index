@@ -3,8 +3,8 @@ const CACHE_NAME = 'file-cache';
 // Files to cache when the service worker installs
 const filesToCache = [
   './index.html',
-  './ARE_YOU_WASHED_IN_THE_BLOOD.mp4',
-  './GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mp4',
+  './ARE_YOU_WASHED_IN_THE_BLOOD.mp3',
+  './GOD_LEADS_HIS_DEAR_CHILDREN_ALONG.mp3',
   './GREAT_IS_THY_FAITHFULNESS.mp3',
   './IM_A_PILGRIM.mp3',
   './MY_SAVIOR_FIRST_OF_ALL.mp3',
@@ -15,11 +15,11 @@ const filesToCache = [
   './LEANING_ON_THE_EVERLASTING_ARMS.mp3',
   './THE_SWEET_BY_AND_BY.mp3',
   './WHAT_A_FRIEND_WE_HAVE_IN_JESUS.mp3',
-  './SWING_LOW_SWEET_CHARIOT.mp4',
-  './FARTHER_ALONG.mp4',
-  './ILL_HAVE_A_NEW_LIFE.mp4',
-  './STAND_BY_ME_FATHER.mp4',
-  './SWING_DOWN_SWEET_CHARIOT.mp4'
+  './SWING_LOW_SWEET_CHARIOT.mp3',
+  './FARTHER_ALONG.mp3',
+  './ILL_HAVE_A_NEW_LIFE.mp3',
+  './STAND_BY_ME_FATHER.mp3',
+  './SWING_DOWN_SWEET_CHARIOT.mp3'
 ];
 
 // Install service worker and cache necessary files
