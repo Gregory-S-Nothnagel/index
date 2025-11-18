@@ -18,10 +18,10 @@ const filesToCache = [
   './SWING_LOW_SWEET_CHARIOT.mp3',
   './JESUS_PAID_IT_ALL.mp3',
   './I_FEEL_LIKE_TRAVELING_ON.mp3',
-  './FARTHER_ALONG.mp3',
-  './ILL_HAVE_A_NEW_LIFE.mp3',
-  './STAND_BY_ME_FATHER.mp3',
-  './SWING_DOWN_SWEET_CHARIOT.mp3'
+  './FARTHER_ALONG.mp3', './THE_WAYFARING_PILGRIM.mp3',
+  './ILL_HAVE_A_NEW_LIFE.mp3', './HIDE_ME,_ROCK_OF_AGES.mp3',
+  './STAND_BY_ME_FATHER.mp3', './IM_A_PILGRIM_SAM_COOKE.mp3',
+  './SWING_DOWN_SWEET_CHARIOT.mp3', './SO_HIGH.mp3'
 ];
 
 // Install service worker and cache necessary files
