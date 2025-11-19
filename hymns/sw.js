@@ -59,6 +59,25 @@ self.addEventListener('fetch', (event) => {
   // Make sure the request URL is only looking at the path after the domain (relative URL)
   const relativeUrl = requestUrl.pathname;
 
+  // --- NETWORK FIRST for index.html ---
+  if (relativeUrl === '/index/hymns/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // Save fresh version into cache
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(relativeUrl, networkResponse.clone());
+            return networkResponse;
+          });
+        })
+        .catch(() =>
+          // Fall back to cache if network fails
+          caches.match(relativeUrl)
+        )
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(relativeUrl).then((cachedResponse) => {
       if (cachedResponse) {
